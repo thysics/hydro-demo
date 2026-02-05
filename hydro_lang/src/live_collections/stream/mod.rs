@@ -2106,11 +2106,11 @@ where
     where
         L: NoTick + NoAtomic,
     {
-        let samples = self.location.source_interval(interval, nondet);
+        let samples = self.location.source_interval(interval);
 
         let tick = self.location.tick();
         self.batch(&tick, nondet)
-            .filter_if_some(samples.batch(&tick, nondet).first())
+            .filter_if_some(samples.batch(&tick, nondet!(/** interval triggers batching */)).first())
             .all_ticks()
             .weaken_retries()
     }

@@ -826,10 +826,10 @@ where
     where
         L: NoTick + NoAtomic,
     {
-        let samples = self.location.source_interval(interval, nondet);
+        let samples = self.location.source_interval(interval);
         sliced! {
             let snapshot = use(self, nondet);
-            let sample_batch = use(samples, nondet);
+            let sample_batch = use(samples, nondet!(/** interval triggers batching */));
 
             snapshot.filter_if_some(sample_batch.first()).into_stream()
         }
