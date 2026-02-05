@@ -135,6 +135,38 @@ where
         out.batch(self, nondet!(/** at runtime, `spin` produces a single value per tick, so each batch is guaranteed to be the same size. */))
     }
 
+    /// Returns a [`Singleton`] containing the current wall-clock time as a
+    /// [`tokio::time::Instant`] for this tick.
+    ///
+    /// The instant is captured at the beginning of the tick and remains constant
+    /// throughout the tick's execution.
+    ///
+    /// # Non-Determinism
+    /// Because this reads wall-clock time, the value is non-deterministic and
+    /// will vary between runs. Use this only when you need access to actual
+    /// timestamps (e.g., for measuring elapsed time, timeouts).
+    ///
+    /// # Example
+    /// ```rust
+    /// # #[cfg(feature = "deploy")] {
+    /// # use hydro_lang::prelude::*;
+    /// # use futures::StreamExt;
+    /// # tokio_test::block_on(hydro_lang::test_util::stream_transform_test(|process| {
+    /// let tick = process.tick();
+    /// let current_time = tick.tick_instant(nondet!(/** reading wall-clock time for logging */));
+    /// current_time.all_ticks().map(q!(|instant| format!("Tick at: {:?}", instant)))
+    /// # }, |mut stream| async move {
+    /// # let _ = stream.next().await;
+    /// # }));
+    /// # }
+    /// ```
+    pub fn tick_instant(
+        &self,
+        _nondet: crate::nondet::NonDet,
+    ) -> Singleton<tokio::time::Instant, Self, Bounded> {
+        self.singleton(q!(tokio::time::Instant::now()))
+    }
+
     pub fn singleton<T>(
         &self,
         e: impl QuotedWithContext<'a, T, Tick<L>>,
