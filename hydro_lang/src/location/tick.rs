@@ -3,6 +3,7 @@ use std::marker::PhantomData;
 use proc_macro2::Span;
 use sealed::sealed;
 use stageleft::{QuotedWithContext, q};
+use tokio::time::Instant;
 
 #[cfg(stageleft_runtime)]
 use super::dynamic::DynLocation;
@@ -16,7 +17,7 @@ use crate::live_collections::boundedness::{Bounded, Unbounded};
 use crate::live_collections::optional::Optional;
 use crate::live_collections::singleton::Singleton;
 use crate::live_collections::stream::{ExactlyOnce, Stream, TotalOrder};
-use crate::nondet::nondet;
+use crate::nondet::{NonDet, nondet};
 
 #[sealed]
 pub trait NoTick {}
@@ -117,6 +118,36 @@ where
 {
     pub fn outer(&self) -> &L {
         &self.l
+    }
+
+    /// Returns the wall-clock time at the start of this tick as a [`Singleton`].
+    ///
+    /// This is the only way to access wall-clock time in Hydro, and requires
+    /// a [`NonDet`] guard to acknowledge the non-determinism introduced.
+    ///
+    /// # Non-Determinism
+    /// Reading the wall-clock time is inherently non-deterministic because
+    /// the exact time depends on when the tick is scheduled and executed.
+    /// The caller must provide a [`NonDet`] guard explaining how this
+    /// non-determinism affects their application.
+    ///
+    /// # Example
+    /// ```rust
+    /// # #[cfg(feature = "deploy")] {
+    /// # use hydro_lang::prelude::*;
+    /// # use futures::StreamExt;
+    /// # tokio_test::block_on(hydro_lang::test_util::stream_transform_test(|process| {
+    /// let tick = process.tick();
+    /// let time = tick.wall_clock_time(nondet!(/** wall-clock time used for logging only */));
+    /// time.all_ticks().map(q!(|t| format!("{:?}", t)))
+    /// # }, |mut stream| async move {
+    /// // prints something like "Instant { t: 12345.678s }"
+    /// # let _ = stream.next().await.unwrap();
+    /// # }));
+    /// # }
+    /// ```
+    pub fn wall_clock_time(&self, _nondet: NonDet) -> Singleton<Instant, Self, Bounded> {
+        self.singleton(q!(Instant::now()))
     }
 
     pub fn spin_batch(
