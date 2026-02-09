@@ -153,6 +153,38 @@ where
         )
     }
 
+    /// Returns the wall-clock time at the start of the current tick.
+    ///
+    /// This provides a [`Singleton`] containing the [`tokio::time::Instant`] captured
+    /// when the tick began executing. The timestamp is stable within a tick - all
+    /// accesses within the same tick will return the same value.
+    ///
+    /// # Non-Determinism
+    /// This function is non-deterministic because the wall-clock time depends on
+    /// when the tick is executed, which varies based on OS scheduling and timing.
+    /// Use this only when you explicitly need time information.
+    ///
+    /// # Example
+    /// ```rust
+    /// # #[cfg(feature = "deploy")] {
+    /// # use hydro_lang::prelude::*;
+    /// # use futures::StreamExt;
+    /// # tokio_test::block_on(hydro_lang::test_util::stream_transform_test(|process| {
+    /// let tick = process.tick();
+    /// let time = tick.wall_clock_time(nondet!(/** logging only */));
+    /// time.map(q!(|t| format!("Tick at {:?}", t))).all_ticks()
+    /// # }, |mut stream| async move {
+    /// # let _result = stream.next().await;
+    /// # }));
+    /// # }
+    /// ```
+    pub fn wall_clock_time(
+        &self,
+        _nondet: crate::nondet::NonDet,
+    ) -> Singleton<tokio::time::Instant, Self, Bounded> {
+        self.singleton(q!(tokio::time::Instant::now()))
+    }
+
     /// Creates an [`Optional`] which has a null value on every tick.
     ///
     /// # Example

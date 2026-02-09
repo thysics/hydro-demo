@@ -167,7 +167,7 @@ pub fn compute_throughput_latency<'a, Client: 'a>(
         .merge_ordered(
             clients
                 .source_interval(q!(Duration::from_secs(1)), nondet_measurement_window)
-                .map(q!(|_| (0, true))),
+                .map(q!(|()| (0, true))),
             nondet_measurement_window,
         );
 
