@@ -2106,7 +2106,7 @@ where
     where
         L: NoTick + NoAtomic,
     {
-        let samples = self.location.source_interval(interval, nondet);
+        let samples = self.location.source_interval(interval);
 
         let tick = self.location.tick();
         self.batch(&tick, nondet)
