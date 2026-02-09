@@ -166,7 +166,7 @@ pub fn compute_throughput_latency<'a, Client: 'a>(
         .map(q!(|batch_size| (batch_size, false)))
         .merge_ordered(
             clients
-                .source_interval(q!(Duration::from_secs(1)), nondet_measurement_window)
+                .source_interval(q!(Duration::from_secs(1)))
                 .map(q!(|_| (0, true))),
             nondet_measurement_window,
         );
