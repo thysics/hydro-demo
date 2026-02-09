@@ -19,15 +19,13 @@ use super::{
 ///
 /// ```rustbook
 /// use std::time::Duration;
-/// use std::time::Instant;
-///use dfir_rs::dfir_syntax;
+/// use dfir_rs::dfir_syntax;
 ///
 /// #[dfir_rs::main]
 /// async fn main() {
 ///     let mut hf = dfir_syntax! {
 ///         source_interval(Duration::from_secs(1))
-///             -> map(|_| { Instant::now() } )
-///             -> for_each(|time| println!("This runs every second: {:?}", time));
+///             -> for_each(|()| println!("This runs every second"));
 ///     };
 ///
 ///     // Will print 4 times (fencepost counting).
@@ -36,10 +34,10 @@ use super::{
 ///         .expect_err("Expected time out");
 ///
 ///     // Example output:
-///     // This runs every second: Instant { t: 27471.704813s }
-///     // This runs every second: Instant { t: 27472.704813s }
-///     // This runs every second: Instant { t: 27473.704813s }
-///     // This runs every second: Instant { t: 27474.704813s }
+///     // This runs every second
+///     // This runs every second
+///     // This runs every second
+///     // This runs every second
 /// }
 /// ```
 pub const SOURCE_INTERVAL: OperatorConstraints = OperatorConstraints {
