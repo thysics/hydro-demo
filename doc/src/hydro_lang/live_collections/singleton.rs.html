@@ -826,7 +826,7 @@
 <a href=#826 id=826 data-nosnippet>826</a>    <span class="kw">where
 <a href=#827 id=827 data-nosnippet>827</a>        </span>L: NoTick + NoAtomic,
 <a href=#828 id=828 data-nosnippet>828</a>    {
-<a href=#829 id=829 data-nosnippet>829</a>        <span class="kw">let </span>samples = <span class="self">self</span>.location.source_interval(interval);
+<a href=#829 id=829 data-nosnippet>829</a>        <span class="kw">let </span>samples = <span class="self">self</span>.location.source_interval(interval, nondet);
 <a href=#830 id=830 data-nosnippet>830</a>        <span class="macro">sliced!</span> {
 <a href=#831 id=831 data-nosnippet>831</a>            <span class="kw">let </span>snapshot = <span class="kw">use</span>(<span class="self">self</span>, nondet);
 <a href=#832 id=832 data-nosnippet>832</a>            <span class="kw">let </span>sample_batch = <span class="kw">use</span>(samples, nondet);
