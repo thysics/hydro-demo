@@ -1,4 +1,6 @@
 use std::marker::PhantomData;
+#[cfg(feature = "dfir_context")]
+use std::time::SystemTime;
 
 use proc_macro2::Span;
 use sealed::sealed;
@@ -16,6 +18,8 @@ use crate::live_collections::boundedness::{Bounded, Unbounded};
 use crate::live_collections::optional::Optional;
 use crate::live_collections::singleton::Singleton;
 use crate::live_collections::stream::{ExactlyOnce, Stream, TotalOrder};
+#[cfg(feature = "dfir_context")]
+use crate::nondet::NonDet;
 use crate::nondet::nondet;
 
 #[sealed]
@@ -117,6 +121,40 @@ where
 {
     pub fn outer(&self) -> &L {
         &self.l
+    }
+
+    /// Returns a [`Singleton`] containing the wall-clock time at the start of the current tick.
+    ///
+    /// This provides explicit access to the timestamp when the tick started executing.
+    /// The same timestamp is returned for all accesses within the same tick.
+    ///
+    /// # Non-Determinism
+    /// Reading the wall-clock time is inherently non-deterministic, as the actual time
+    /// depends on when the program is executed. A [`NonDet`] guard is required to
+    /// acknowledge this source of non-determinism.
+    ///
+    /// # Example
+    /// ```rust
+    /// # #[cfg(feature = "deploy")] {
+    /// # use hydro_lang::prelude::*;
+    /// # use futures::StreamExt;
+    /// # use std::time::SystemTime;
+    /// # tokio_test::block_on(hydro_lang::test_util::stream_transform_test(|process| {
+    /// let tick = process.tick();
+    /// tick.current_tick_start(nondet!(/** timestamp used only for logging */))
+    /// #   .all_ticks()
+    /// # }, |mut stream| async move {
+    /// // SystemTime { ... }
+    /// # let _ = stream.next().await;
+    /// # }));
+    /// # }
+    /// ```
+    #[cfg(feature = "dfir_context")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "dfir_context")))]
+    pub fn current_tick_start(&self, _nondet: NonDet) -> Singleton<SystemTime, Self, Bounded> {
+        use crate::runtime_context::RUNTIME_CONTEXT;
+        self.singleton(q!(()))
+            .map(q!(|_: ()| -> SystemTime { RUNTIME_CONTEXT.current_tick_start() }))
     }
 
     pub fn spin_batch(
